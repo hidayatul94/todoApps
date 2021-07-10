@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +23,8 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   DatabaseReference _ref = FirebaseDatabase.instance.reference().child('Todo');
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   TextEditingController controller = new TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool validate = false;
   int index = 0;
   @override
   void initState() {
@@ -29,7 +32,8 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     super.initState();
     DateTime now = DateTime.now();
     setState(() {
-      startDateFormat = DateFormat("dd-MM-yyyy").format(now);
+      startDateFormat = DateFormat("dd MMM yyyy").format(now);
+      startDateTime = DateFormat("yyyy-MM-dd hh:mm:ss").format(now);
     });
     if (widget.mode == "edit") {
       setState(() {
@@ -46,20 +50,57 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   }
 
   Future<void> createRecord() async {
-    Map<String, String> contact = {
-      'title': controller.text,
-      'startDate': startDateTime,
-      'endDate': endDateTime,
-      'status': widget.mode != "edit" ? 'Incomplete' : todoData['status']
-    };
-    if (widget.mode == "edit") {
-      _ref.child(todoData['key']).update(contact).then((value) {
-        Navigator.pop(context);
-      });
-    } else {
-      _ref.push().set(contact).then((value) {
-        Navigator.pop(context);
-      });
+    dismissKeyboard();
+    setState(() {
+      controller.text.isEmpty ? validate = true : validate = false;
+    });
+    if (validate == false) {
+      if (startDateTime != '' && endDateTime != '') {
+        Map<String, String> todo = {
+          'title': controller.text,
+          'startDate': startDateTime,
+          'endDate': endDateTime,
+          'status': widget.mode != "edit" ? 'Incomplete' : todoData['status']
+        };
+        if (widget.mode == "edit") {
+          _ref.child(todoData['key']).update(todo).then((value) {
+            Navigator.pop(context);
+          });
+        } else {
+          _ref.push().set(todo).then((value) {
+            Navigator.pop(context);
+          });
+        }
+      } else {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            // return object of type Dialog
+            return AlertDialog(
+              title: new Text('Warning'),
+              content:
+                  new Text("Please select start date and estimate end date."),
+              actions: [
+                // usually buttons at the bottom of the dialog
+                new FlatButton(
+                  child: new Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+  dismissKeyboard() {
+    FocusScopeNode currentFocus = FocusScope.of(context);
+
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
     }
   }
 
@@ -108,6 +149,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                     decoration: InputDecoration(
                       hintText: 'Please key in your To-Do title here',
                       border: OutlineInputBorder(),
+                      errorText: validate ? 'Value Can\'t Be Empty' : null,
                     ),
                     controller: controller,
                   ),
@@ -125,6 +167,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                   ),
                   InkWell(
                     onTap: () async {
+                      dismissKeyboard();
                       datepick = await showDatePicker(
                           context: context,
                           initialDate: new DateTime.now(),
@@ -140,6 +183,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                         startDateFormat =
                             DateFormat("dd MMM yyyy").format(datepick!);
                         startDateTime = startDate + ' ' + timeNow;
+                        SystemChannels.textInput.invokeMethod('TextInput.hide');
                       });
                     },
                     child: Container(
@@ -189,6 +233,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                   ),
                   InkWell(
                     onTap: () async {
+                      dismissKeyboard();
                       datepick = await showDatePicker(
                           context: context,
                           initialDate: new DateTime.now(),

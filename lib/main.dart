@@ -260,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 setState(() {
                                   item['select'] = value!;
                                   print(item['select']);
-                                  Map<String, String> contact = {
+                                  Map<String, String> todo = {
                                     'title': item['title'],
                                     'startDate': item['startDate'],
                                     'endDate': item['endDate'],
@@ -271,7 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                                   reference
                                       .child(item['key'])
-                                      .update(contact)
+                                      .update(todo)
                                       .then((value) {
                                     getTodoList();
                                   });
@@ -308,17 +308,12 @@ class _MyHomePageState extends State<MyHomePage> {
           query: _ref,
           itemBuilder: (BuildContext context, DataSnapshot snapshot,
               Animation<double> animation, int index) {
-            Map contact = snapshot.value;
-            contact['key'] = snapshot.key;
-            return listCardWidget(item: contact);
+            Map todo = snapshot.value;
+            todo['key'] = snapshot.key;
+            return listCardWidget(item: todo);
           },
         ),
       ),
-      // SingleChildScrollView(
-      //   child: Container(
-      //       child: Padding(
-      //           padding: const EdgeInsets.all(8.0), child: listCardWidget())),
-      // ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.redAccent,
         onPressed: () {
