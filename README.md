@@ -1,6 +1,7 @@
 # todo_app
 
-A new Flutter project.
+This is a sample flutter todo app.
+This project is about create a to do list, where we will be saving the list into Firebase Realtime database and then we will retrieve all the todo data into a ListView, not a simple ListView but a special Flutter Widget made for Firebase Realtime Database called FirebaseAnimatedList.
 
 ## Getting Started
 
